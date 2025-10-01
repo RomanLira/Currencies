@@ -69,23 +69,24 @@ public class ExchangeRateService : IExchangeRateService
     public async Task<IEnumerable<CurrencyDto>> GetRatesAsync(DateTime? from, DateTime? to, string? charCode,
         int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
-        var query = _context.Currencies.AsQueryable();
-
-        if (from.HasValue)
-            query = query.Where(_ => _.ExchangeRates.Any(r => r.RateDate >= from.Value));
-        
-        if (to.HasValue)
-            query = query.Where(_ => _.ExchangeRates.Any(r => r.RateDate <= to.Value));
+        var query = _context.Currencies
+            .Include(_ => _.ExchangeRates
+                .Where(_ =>
+                    (!from.HasValue || _.RateDate >= DateTime.SpecifyKind(from.Value, DateTimeKind.Utc)) &&
+                    (!to.HasValue   || _.RateDate <= DateTime.SpecifyKind(to.Value, DateTimeKind.Utc))
+                ))
+            .AsQueryable();
         
         if (!string.IsNullOrEmpty(charCode))
             query = query.Where(_ => _.CharCode == charCode);
 
-        return await query
+        var entities = await query
             .OrderBy(_ => _.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ProjectTo<CurrencyDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
+        
+        return _mapper.Map<List<CurrencyDto>>(entities);
     }
 
     public async Task<ExchangeRateDto?> GetLatestForCurrencyAsync(int currencyId, CancellationToken cancellationToken = default)
