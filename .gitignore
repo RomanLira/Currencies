@@ -1,0 +1,24 @@
+################################################################################
+#  GITIGNORE-    Microsoft(R) Visual Studio.
+#  GITIGNORE-    Microsoft(R) Visual Studio.
+################################################################################
+
+.vs
+bin
+obj
+*.user
+
+*.svclog
+logs
+
+DiskStorage
+*.tmp
+Database/Deploy/log.txt
+.idea/
+*.user
+
+yarn.lock
+.vscode
+
+.DS_Store
+.fake
